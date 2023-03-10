@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera Page</title>
+</head>
+<body>
+    <button onclick="openCamera()">Open Camera</button>
+    <br><br>
+    <div id="camera">
+        <video id="video" width="640" height="480" autoplay></video>
+        <br><br>
+        <button onclick="takePicture()">Take Picture</button>
+        <button onclick="startRecording()">Start Recording</button>
+        <button onclick="stopRecording()">Stop Recording</button>
+    </div>
+    <script>
+        var mediaRecorder;
+        var chunks = [];
+
+        function openCamera() {
+            navigator.mediaDevices.getUserMedia({video: true})
+            .then(function(stream) {
+                var video = document.getElementById("video");
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
+        }
+
+        function startRecording() {
+            var video = document.getElementById("video");
+            mediaRecorder = new MediaRecorder(video.srcObject);
+
+            mediaRecorder.ondataavailable = function(event) {
+                chunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = function() {
+                var blob = new Blob(chunks, {type: "video/mp4"});
+                var videoURL = URL.createObjectURL(blob);
+                var oldVideo = document.getElementById("recordedVideo");
+                if (oldVideo) {
+                    oldVideo.parentNode.removeChild(oldVideo);
+                }
+                var newVideo = document.createElement("video");
+                newVideo.src = videoURL;
+                newVideo.id = "recordedVideo";
+                var videoDiv = document.getElementById("camera");
+                videoDiv.appendChild(newVideo);
+                newVideo.play();
+ 
+                    
+            };
+
+            mediaRecorder.start();
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+        }
+
+        function takePicture() {
+            var video = document.getElementById("video");
+            var canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            var context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            var dataURL = canvas.toDataURL('image/png');
+            var img = document.createElement("img");
+            img.src = dataURL;
+            var videoDiv = document.getElementById("camera");
+            videoDiv.appendChild(img);
+        }
+    </script>
+</body>
+</html>
+
+
